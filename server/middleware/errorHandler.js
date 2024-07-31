@@ -1,8 +1,16 @@
 import { constants } from '../constants.js';
+import mongoose from 'mongoose';
 
 const { VALIDATION_ERROR, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, INTERNAL_SERVER_ERROR } = constants;
 
 const errorHandler = (err, req, res, next) => {
+ if (err instanceof mongoose.CastError) {
+  return res.status(VALIDATION_ERROR).json({
+    title: 'Invalid ID format',
+    message: err.message,
+    stackTrace: err.stack
+  });
+  }
   const statusCode = res.statusCode ?? INTERNAL_SERVER_ERROR;
   switch(statusCode){
     case VALIDATION_ERROR:
