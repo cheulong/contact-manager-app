@@ -17,7 +17,7 @@ const registerUser = asyncHandler(async(req, res) => {
         res.status(400);
         throw new Error('User already exists');
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, process.env.BCRYPT_SALT);
     const user = await User.create({username, email, password: hashedPassword});
     if (user) {
         res.status(201).json({ _id: user._id, username, email, password: hashedPassword });
@@ -39,7 +39,6 @@ const loginUser = asyncHandler(async(req, res) => {
     }
     const user = await User.findOne({email});
     if ( user && await bcrypt.compare(password, user.password) ) {
-        console.log({user});
         const accessToken = await jwt.sign({
             user: {
                 _id: user._id,
@@ -47,7 +46,7 @@ const loginUser = asyncHandler(async(req, res) => {
                 email: user.email
             }
         }, process.env.JWT_SECRET, {
-            expiresIn: '1m'
+            expiresIn: process.env.JWT_EXPIRATION
         });
         res.status(200).json({ accessToken });
     } else {
@@ -60,7 +59,7 @@ const loginUser = asyncHandler(async(req, res) => {
 //@route POST api/users/current
 //@access Private
 const currentUser = asyncHandler(async(req, res) => {
-    res.status(200).json({message: 'Current user'});
+    res.status(200).json(req.user);
 });
 
 export {
